@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My First Home</title>
+  <style>
+    @import url('https://fonts.googleapis.com/earlyaccess/nanumpenscript.css');
+
+    body {
+      background-color: #000;
+      color: #fff;
+    }
+
+    a {
+      color: #7dffb8;
+    }
+
+    .email {
+      font-family: 'Nanum Pen Script', cursive;
+      font-size: 28px;
+    }
+
+    /* ===== 홀로그램 틸트 프로필 사진 ===== */
+    .holo-scene {
+      --size: min(300px, 80vw);
+      --tx: 0;
+      --ty: 0;
+      --hyp: 0;
+      --h1: 0;
+      --h2: 55;
+      --h3: 180;
+      --h4: 285;
+      position: relative;
+      width: var(--size);
+      height: var(--size);
+      margin: 16px 0 28px;
+      perspective: calc(var(--size) * 3);
+    }
+
+    .holo-shadow {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: -6%;
+      height: 10%;
+      border-radius: 50%;
+      background: hsl(var(--h2) 85% 55% / .45);
+      filter: blur(calc(var(--size) / 18));
+      translate: calc(var(--tx) * var(--size) * -.08) 0;
+    }
+
+    .holo-card {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 50%;
+      isolation: isolate;
+      transform: rotateX(calc(var(--ty) * -14deg)) rotateY(calc(var(--tx) * 18deg));
+      box-shadow:
+        0 0 0 1px #ffffff2b,
+        0 calc(var(--size) * .04) calc(var(--size) * .12) #0009,
+        0 0 calc(var(--hyp) * var(--size) * .14) hsl(var(--h2) 90% 62% / .5);
+      cursor: pointer;
+    }
+
+    .holo-card .round-photo {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      user-select: none;
+    }
+
+    /* 가장자리에 빛나는 테두리 */
+    .holo-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(calc(135deg + var(--tx) * 60deg), hsl(var(--h1) 95% 70%), transparent 35%, transparent 65%, hsl(var(--h3) 95% 70%));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+      pointer-events: none;
+    }
+
+    /* 무지개빛 포일 */
+    .holo-foil {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 14 -8.6'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+        repeating-linear-gradient(115deg, hsl(var(--h1) 100% 62%) 0%, hsl(var(--h2) 100% 62%) 4%, hsl(var(--h3) 100% 62%) 8%, hsl(var(--h4) 100% 62%) 12%, hsl(var(--h1) 100% 62%) 16%);
+      background-size: 160px 160px, 300% 300%;
+      background-position: center, calc(50% + var(--tx) * 40%) calc(50% + var(--ty) * 40%);
+      background-blend-mode: screen;
+      mix-blend-mode: color-dodge;
+      opacity: calc(.16 + var(--hyp) * .42);
+      filter: brightness(.62) contrast(1.5) saturate(1.4);
+    }
+
+    /* 마우스 위치를 따라다니는 빛 반사 */
+    .holo-glare {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(farthest-corner circle at calc(50% + var(--tx) * 48%) calc(50% + var(--ty) * 48%), #ffffffd9 0%, #ffffff47 16%, transparent 52%);
+      mix-blend-mode: overlay;
+      opacity: calc(.3 + var(--hyp) * .7);
+    }
+
+    /* 클릭하면 지나가는 빛줄기 */
+    .holo-shine {
+      position: absolute;
+      inset: -60%;
+      background: linear-gradient(105deg, transparent 42%, #ffffff8c 50%, transparent 58%);
+      translate: -70% 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .holo-shine.is-on {
+      animation: holo-sweep .9s cubic-bezier(.3, .6, .2, 1);
+    }
+
+    @keyframes holo-sweep {
+      0%   { translate: -70% 0; opacity: 1; }
+      100% { translate: 70% 0; opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .holo-shine.is-on {
+        animation: none;
+      }
+    }
+
+    /* ===== 마그네틱 글로우 버튼 ===== */
+    @property --glow-angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @keyframes glow-spin {
+      to { --glow-angle: 360deg; }
+    }
+
+    @keyframes glow-ripple {
+      from { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+      to   { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    .glow-btn {
+      position: relative;
+      isolation: isolate;
+      display: inline-flex;
+      margin-top: 12px;
+      padding: 1px;
+      border-radius: 9999px;
+      color: #fff;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.3s ease-out;
+    }
+
+    .glow-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: conic-gradient(from var(--glow-angle), #03C75A, #7dffb8, #33d6c7, #03C75A);
+      animation: glow-spin 3s linear infinite;
+    }
+
+    .glow-btn::after {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      z-index: -2;
+      border-radius: inherit;
+      background: conic-gradient(from var(--glow-angle), #03C75A, #7dffb8, #33d6c7, #03C75A);
+      filter: blur(12px);
+      opacity: 0.4;
+      transition: opacity 0.3s;
+      animation: glow-spin 3s linear infinite;
+    }
+
+    .glow-btn:hover::after {
+      opacity: 0.9;
+    }
+
+    .glow-btn:focus-visible {
+      outline: 2px solid #7dffb8;
+      outline-offset: 4px;
+    }
+
+    .glow-btn__inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      padding: 14px 28px;
+      border-radius: 9999px;
+      background: #0a0a0a;
+      font-size: 16px;
+    }
+
+    .glow-btn__inner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.2), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .glow-btn:hover .glow-btn__inner::before {
+      opacity: 1;
+    }
+
+    .glow-btn__label {
+      position: relative;
+    }
+
+    .glow-ripple {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+      animation: glow-ripple 0.7s ease-out forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .glow-btn::before,
+      .glow-btn::after,
+      .glow-ripple {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>안녕하세요!</h1>
+  <p>제 첫 번째 홈페이지예요.</p>
+
+  <div class="holo-scene">
+    <div class="holo-shadow"></div>
+    <div class="holo-card">
+      <img class="round-photo" src="a1.png" alt="아머드 코어 6 어드밴스드 가라지 화면" draggable="false">
+      <span class="holo-foil" aria-hidden="true"></span>
+      <span class="holo-glare" aria-hidden="true"></span>
+      <span class="holo-shine" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <p class="email">이메일: <a href="mailto:ksw961224@naver.com">ksw961224@naver.com</a></p>
+
+  <a class="glow-btn" href="https://www.naver.com" target="_blank" rel="noopener">
+    <span class="glow-btn__inner">
+      <span class="glow-btn__label">네이버 바로가기 →</span>
+    </span>
+  </a>
+
+  <!-- 홀로그램 틸트 -->
+  <script>
+    (function () {
+      const scene = document.querySelector('.holo-scene');
+      const card = scene.querySelector('.holo-card');
+      const shine = scene.querySelector('.holo-shine');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const pointer = { x: 0, y: 0, active: false };
+      const tiltX = { value: 0, speed: 0 };
+      const tiltY = { value: 0, speed: 0 };
+
+      // 스프링: 목표와의 거리만큼 가속하고, 감쇠로 속도를 줄여요.
+      function spring(state, target, stiffness, damping, instant) {
+        if (instant) { state.value = target; state.speed = 0; return; }
+        state.speed = (state.speed + (target - state.value) * stiffness) * damping;
+        state.value += state.speed;
+      }
+
+      function clamp(n) {
+        return Math.max(-1, Math.min(1, n));
+      }
+
+      // 화면 어디서든 마우스를 따라 기울어요. 사진 크기만큼 떨어지면 최대로 기울어요.
+      window.addEventListener('pointermove', (e) => {
+        const box = scene.getBoundingClientRect();
+        pointer.x = clamp((e.clientX - box.left - box.width / 2) / box.width);
+        pointer.y = clamp((e.clientY - box.top - box.height / 2) / box.height);
+        pointer.active = true;
+      });
+
+      document.documentElement.addEventListener('pointerleave', () => { pointer.active = false; });
+      window.addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') pointer.active = false; });
+      window.addEventListener('pointercancel', () => { pointer.active = false; });
+
+      function playShine() {
+        shine.classList.remove('is-on');
+        void shine.offsetWidth; // 애니메이션을 처음부터 다시 재생하기 위한 트릭
+        shine.classList.add('is-on');
+      }
+
+      card.addEventListener('click', playShine);
+      playShine();
+
+      let last = performance.now();
+      let elapsed = 0;
+
+      function loop(now) {
+        const delta = Math.min(48, now - last);
+        last = now;
+        elapsed += delta;
+        const t = elapsed / 1000;
+
+        // 마우스가 없을 때는 천천히 흔들려요.
+        const targetX = reduce ? 0 : pointer.active ? pointer.x : Math.sin(t * 0.9) * 0.6;
+        const targetY = reduce ? 0 : pointer.active ? pointer.y : Math.cos(t * 0.65) * 0.38;
+
+        const steps = Math.max(1, Math.round(delta / 16.7));
+        for (let i = 0; i < steps; i++) {
+          spring(tiltX, targetX, 0.08, 0.8, reduce);
+          spring(tiltY, targetY, 0.08, 0.8, reduce);
+        }
+
+        scene.style.setProperty('--tx', tiltX.value.toFixed(4));
+        scene.style.setProperty('--ty', tiltY.value.toFixed(4));
+        scene.style.setProperty('--hyp', Math.min(1, Math.hypot(tiltX.value, tiltY.value)).toFixed(4));
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    })();
+  </script>
+
+  <!-- 마그네틱 글로우 버튼 -->
+  <script>
+    const btn = document.querySelector('.glow-btn');
+    const inner = btn.querySelector('.glow-btn__inner');
+    const strength = 12;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    btn.addEventListener('pointermove', (e) => {
+      const box = btn.getBoundingClientRect();
+      const x = (e.clientX - box.left) / box.width;
+      const y = (e.clientY - box.top) / box.height;
+
+      btn.style.setProperty('--mx', (x * 100) + '%');
+      btn.style.setProperty('--my', (y * 100) + '%');
+
+      if (!reduceMotion.matches) {
+        btn.style.transform = 'translate(' + (x - 0.5) * strength + 'px, ' + (y - 0.5) * strength + 'px)';
+      }
+    });
+
+    btn.addEventListener('pointerleave', () => {
+      btn.style.transform = '';
+    });
+
+    btn.addEventListener('click', (e) => {
+      const box = inner.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'glow-ripple';
+      ripple.setAttribute('aria-hidden', 'true');
+      ripple.style.left = (e.clientX - box.left) + 'px';
+      ripple.style.top = (e.clientY - box.top) + 'px';
+      inner.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 700);
+    });
+  </script>
+</body>
+</html>
